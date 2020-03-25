@@ -8,9 +8,6 @@ let option = 10;
 // your current balance allows us to continue to act in bear markets.
 const aggression = .9;
 
-// etrade's commission is $.50 per contract for this volume.
-const commission = .5;
-
 // start with enough money to buy 1 aggressive option, which is an option * 100;
 // let balance = (option * 100 * aggression) + 1;
 
@@ -46,7 +43,7 @@ function act (price) {
     if (0 < price && (price * 100) < purchaseBudget) {
       // make the sale
       const contract = sale(price);
-      balance -= ((contract.strike * contract.amount * 100) + (contract.amount * commission));
+      balance -= (contract.strike * contract.amount * 100);
       currentContract = contract;
     }
   // check to see if we should sell it
@@ -58,7 +55,8 @@ function act (price) {
       currentContract = null;
       cycles = 0;
     } else if (cycles > 3) {
-      // sell the option if we've been holding it for more than 3 cycles
+      // sell the option if we've been holding for more than 3 cycles, sell
+      // everything for cash
       balance += (price * 100) * currentContract.amount;
       currentContract = null;
       cycles = 0;
