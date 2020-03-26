@@ -1,29 +1,33 @@
 const EventEmitter = require('events');
 const listener = new EventEmitter();
 
-// This contract is worth $10
-let option = 10;
+let option, balance, currentContract, cycles;
 // Be willing to spend up to 90% of your balance at once, ideally would be a 
 // sigmoid of past performance, but set constant for now. Going greater than
 // your current balance allows us to continue to act in bear markets.
 const aggression = .9;
 
-// start with enough money to buy 1 aggressive option, which is an option * 100;
-// let balance = (option * 100 * aggression) + 1;
+function init() {
+  // This contract is worth $10
+  option = 10;
 
-// start with enough money to qualify for pattern day trader status
-let balance = 25000;
+  // start with enough money to buy 1 aggressive option, which is an option * 100;
+  //  balance = (option * 100 * aggression) + 1;
 
-let currentContract = null;
-let cycles = 0;
+  // start with enough money to qualify for pattern day trader status
+  balance = 25000;
+
+  currentContract = null;
+  cycles = 0;
+}
 
 function round(x) {
   return Math.floor(x * 100) / 100;
 }
-function status(price) {
+function status(price, day) {
   const contractPrice = currentContract === null ? 0 :
     (currentContract.strike * currentContract.amount * 100);
-  console.log(`${round(balance + (contractPrice))}, ${round(price * 100)}`);
+  console.log(`${round(balance + (contractPrice))}, ${round(price)}, ${day}`);
 }
 
 // Determine the amount of contracts I can buy, given current price, balance,
@@ -35,7 +39,7 @@ function sale(price) {
   };
 }
 
-function act (price) {
+function act (price, day) {
   cycles += 1;
   let purchaseBudget = balance * aggression;
   // we're not holding an option right now, check if we should buy it.
@@ -63,19 +67,23 @@ function act (price) {
     }
   }
 
-  status(price);
+  status(price, day);
 }
 
-async function run() {
+function run(day) {
   // 2340 cycles, or the number of seconds in a NYSE trading day / 10
   for(let i = 0; i < 2340; i ++) {
-    // randomly the price random jump up to += $.50 per cycle, but never less
+    // randomly the price random jump up to += $.10 per cycle, but never less
     // less than $0.
-    option += (Math.random() - .5);
+    option += (Math.random() * .2 - .1);
     option = Math.max(option, 0);
-    act(option);
+    act(option, day);
   }
 }
 
-console.log('worth, price');
-run();
+// simulate for a 100 days
+console.log('worth, price, day');
+for(let i = 0; i < 100; i ++) {
+  init();
+  run(i);
+}
